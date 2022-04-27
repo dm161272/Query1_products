@@ -69,7 +69,7 @@ echo "<table border='1' width=100%>
 
 //3.List all columns in the producto table.
 function query_3($pdo) {
-  $query = "SELECT * FROM producto";
+  $query = "SHOW COLUMNS FROM producto";
   $d = $pdo->query($query);
   
 
@@ -286,7 +286,7 @@ function query_12($pdo) {
 
 //13.Lists the nombres of the fabricantes in ascending order
 function query_13($pdo) {
-  $query = "SELECT nombre FROM fabricante ORDER BY nombre ASC";
+  $query = "SELECT nombre FROM fabricante ORDER BY nombre";
   $d = $pdo->query($query);
   
   echo "<table border='1' width=100%>
@@ -388,7 +388,7 @@ function query_17($pdo) {
 //18.List the nombre and precio of the cheapest producto. (Use only the ORDER BY and LIMIT clauses). 
 //NOTE: I could not use MIN (precio) here, I would need GROUP BY
 function query_18($pdo) {
-  $query = "SELECT nombre, precio FROM producto GROUP BY precio ASC LIMIT 0, 1";
+  $query = "SELECT nombre, precio FROM producto ORDER BY precio ASC LIMIT 0, 1";
   $d = $pdo->query($query);
   
   echo "<table border='1' width=100%>
@@ -408,10 +408,10 @@ function query_18($pdo) {
   }
 
   
-//18.List the nombre and precio of the most expensive producto. (Use only the ORDER BY and LIMIT clauses). 
+//19.List the nombre and precio of the most expensive producto. (Use only the ORDER BY and LIMIT clauses). 
 //NOTE: I could not use MIN (precio) here, I would need GROUP BY
 function query_19($pdo) {
-  $query = "SELECT nombre, precio FROM producto GROUP BY precio DESC LIMIT 0, 1";
+  $query = "SELECT nombre, precio FROM producto ORDER BY precio DESC LIMIT 0, 1";
   $d = $pdo->query($query);
   
   echo "<table border='1' width=100%>
@@ -534,7 +534,7 @@ function query_23($pdo) {
   function query_24($pdo) {
     $query = "SELECT producto.nombre as pn, precio, fabricante.nombre as mn FROM producto
     LEFT JOIN fabricante ON producto.codigo_fabricante = fabricante.codigo
-    WHERE precio IN (SELECT MIN(precio) FROM producto)";
+    ORDER BY precio LIMIT 0, 1";
 
     $d = $pdo->query($query);
     
@@ -562,7 +562,7 @@ function query_23($pdo) {
   function query_25($pdo) {
     $query = "SELECT producto.nombre as pn, precio, fabricante.nombre as mn FROM producto
     LEFT JOIN fabricante ON producto.codigo_fabricante = fabricante.codigo
-    WHERE precio IN (SELECT MAX(precio) FROM producto)";
+    ORDER BY precio DESC LIMIT 0, 1";
 
     $d = $pdo->query($query);
     
@@ -926,12 +926,10 @@ function query_37($pdo) {
 
 //38. List the most expensive producto nombre from the fabricante Lenovo
 function query_38($pdo) {
-  $query = "SELECT producto.nombre as pn, precio as mx, fabricante.nombre as mn FROM producto 
-  LEFT JOIN fabricante ON producto.codigo_fabricante = fabricante.codigo
-  WHERE precio IN (SELECT MAX(precio)
-                  FROM producto 
-                  LEFT JOIN fabricante ON producto.codigo_fabricante = fabricante.codigo
-                  WHERE fabricante.nombre = 'Lenovo') LIMIT 0, 1";
+  $query = "SELECT producto.nombre as pn, MAX(precio) as mx, fabricante.nombre as mn FROM producto 
+  LEFT JOIN fabricante 
+  ON producto.codigo_fabricante = fabricante.codigo
+ WHERE fabricante.nombre = 'Lenovo'";
 
   $d = $pdo->query($query);
   
@@ -956,12 +954,9 @@ function query_38($pdo) {
 
 //39.Lists the cheapest producto nombre from the fabricante Hewlett-Packard.
 function query_39($pdo) {
-  $query = "SELECT producto.nombre as pn, precio as mx, fabricante.nombre as mn FROM producto 
+  $query = "SELECT producto.nombre as pn, MIN(precio) as mx, fabricante.nombre as mn FROM producto 
   LEFT JOIN fabricante ON producto.codigo_fabricante = fabricante.codigo
-  WHERE precio IN (SELECT MIN(precio)
-                  FROM producto 
-                  LEFT JOIN fabricante ON producto.codigo_fabricante = fabricante.codigo
-                  WHERE fabricante.nombre = 'Hewlett-Packard') LIMIT 0, 1";
+  WHERE fabricante.nombre = 'Hewlett-Packard'";
 
   $d = $pdo->query($query);
   
@@ -987,8 +982,8 @@ function query_39($pdo) {
 
 //40.Returns all productos in the database that are preciod at or above the most expensive producto from the fabricante Lenovo.
 function query_40($pdo) {
-  $query = "SELECT producto.nombre as pn, precio, fabricante.nombre as mn FROM producto 
-  LEFT JOIN fabricante ON producto.codigo_fabricante = fabricante.codigo
+  $query = "SELECT producto.nombre as pn, precio FROM producto 
+ 
   WHERE precio >= (SELECT MAX(precio) FROM producto 
                   LEFT JOIN fabricante ON producto.codigo_fabricante = fabricante.codigo
                   WHERE fabricante.nombre = 'Lenovo')";
@@ -1000,14 +995,12 @@ function query_40($pdo) {
   <tr>
   <th>producto</th>
   <th>precio</th>
-  <th>fabricante</th>
   </tr>";
 
   foreach ($d as $data) {
     echo "<tr>";
     echo "<td>" . $data['pn'] . "</td>";
     echo "<td>" . $data['precio'] . "</td>";
-    echo "<td>" . $data['mn'] . "</td>";
     echo "</tr>";
   }
   echo "</table>";
@@ -1015,8 +1008,10 @@ function query_40($pdo) {
   }
 
 //41.List all Asus productos that are preciod above the average precio of all their productos.
+    //Creo que primero JOIN se necesito aquí
+    //porque necesitamos seleccionar productos de un fabricante en particular:-)
 function query_41($pdo) {
-  $query = "SELECT producto.nombre as pn, precio, fabricante.nombre as mn FROM producto 
+  $query = "SELECT producto.nombre as pn, precio FROM producto 
   LEFT JOIN fabricante ON producto.codigo_fabricante = fabricante.codigo
   WHERE fabricante.nombre = 'Asus' AND precio > (SELECT AVG(precio) FROM producto 
   LEFT JOIN fabricante ON producto.codigo_fabricante = fabricante.codigo
@@ -1029,14 +1024,12 @@ function query_41($pdo) {
   <tr>
   <th>producto</th>
   <th>precio</th>
-  <th>fabricante</th>
   </tr>";
 
   foreach ($d as $data) {
     echo "<tr>";
     echo "<td>" . $data['pn'] . "</td>";
     echo "<td>" . $data['precio'] . "</td>";
-    echo "<td>" . $data['mn'] . "</td>";
     echo "</tr>";
   }
   echo "</table>";
